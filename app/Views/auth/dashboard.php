@@ -38,6 +38,13 @@
         .info-card:hover {
             transform: translateY(-5px);
         }
+        /* Ensure modal appears properly */
+        .modal {
+            z-index: 9999 !important;
+        }
+        .modal-backdrop {
+            z-index: 9998 !important;
+        }
     </style>
 </head>
 <body>
@@ -57,6 +64,37 @@
             </div>
         </div>
     </nav>
+
+    <!-- Immediate back button prevention -->
+    <script>
+        // Disable back button immediately
+        (function() {
+            history.pushState(null, null, location.href);
+            window.addEventListener('popstate', function() {
+                history.pushState(null, null, location.href);
+                // Show logout modal with better error handling
+                setTimeout(function() {
+                    try {
+                        const modalElement = document.getElementById('logoutModal');
+                        if (modalElement) {
+                            const logoutModal = new bootstrap.Modal(modalElement);
+                            logoutModal.show();
+                        } else {
+                            // Fallback: direct confirmation
+                            if (confirm('Do you want to log out?')) {
+                                window.location.href = '<?= base_url('logout') ?>';
+                            }
+                        }
+                    } catch (error) {
+                        // Fallback: direct confirmation
+                        if (confirm('Do you want to log out?')) {
+                            window.location.href = '<?= base_url('logout') ?>';
+                        }
+                    }
+                }, 200);
+            });
+        })();
+    </script>
 
     <div class="container mt-4">
         <?php if (session()->getFlashdata('success')): ?>
@@ -83,7 +121,13 @@
                         <h1 class="display-4 mb-3">
                             <i class="fas fa-home me-3"></i>Welcome to Your Dashboard
                         </h1>
-                        <p class="lead mb-0">You have successfully logged in to your account!</p>
+                        <p class="lead mb-3">You have successfully logged in to your account!</p>
+                        <div class="text-center">
+                            <span class="badge bg-light text-dark fs-6 px-3 py-2">
+                                <i class="fas fa-user-tag me-2"></i>Current Role: 
+                                <strong><?= !empty($user['role']) ? ucfirst(esc($user['role'])) : 'Not Set' ?></strong>
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -123,9 +167,17 @@
                         </div>
                         <h5 class="card-title">User Role</h5>
                         <p class="card-text text-muted">
-                            <span class="badge bg-<?= $user['role'] === 'admin' ? 'danger' : 'primary' ?> fs-6">
-                                <?= ucfirst(esc($user['role'])) ?>
-                            </span>
+                            <?php if (!empty($user['role'])): ?>
+                                <span class="badge bg-<?= $user['role'] === 'admin' ? 'danger' : ($user['role'] === 'teacher' ? 'warning' : 'primary') ?> fs-6">
+                                    <?= ucfirst(esc($user['role'])) ?>
+                                </span>
+                            <?php else: ?>
+                                <span class="badge bg-secondary fs-6">No Role Set</span>
+                                <!-- Debug info -->
+                                <small class="d-block mt-1 text-danger">
+                                    Debug: Role = "<?= esc($user['role'] ?? 'NULL') ?>"
+                                </small>
+                            <?php endif; ?>
                         </p>
                     </div>
                 </div>
@@ -158,13 +210,6 @@
                                 </div>
                             </div>
                         </div>
-                        <hr>
-                        <div class="text-center">
-                            <p class="text-muted mb-3">Ready to leave?</p>
-                            <button type="button" class="btn btn-danger btn-lg" data-bs-toggle="modal" data-bs-target="#logoutModal">
-                                <i class="fas fa-sign-out-alt me-2"></i>Logout Securely
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -185,26 +230,25 @@
     <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
+                <div class="modal-header bg-warning text-dark">
                     <h5 class="modal-title" id="logoutModalLabel">
                         <i class="fas fa-sign-out-alt me-2"></i>Confirm Logout
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body text-center">
+                <div class="modal-body text-center py-4">
                     <div class="mb-3">
                         <i class="fas fa-question-circle fa-3x text-warning"></i>
                     </div>
                     <h5>Do you want to log out?</h5>
-                    <p class="text-muted">You will be redirected to the home page and will need to log in again to access your dashboard.</p>
-                    <small class="text-info"><i class="fas fa-info-circle me-1"></i>This confirmation appears when you try to navigate away from the dashboard.</small>
+                    <p class="text-muted">You will be signed out of your account and redirected to the home page.</p>
                 </div>
                 <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-secondary btn-lg me-2" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-2"></i>No, Stay Here
+                    <button type="button" class="btn btn-secondary btn-lg me-3" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>No
                     </button>
                     <a href="<?= base_url('logout') ?>" class="btn btn-danger btn-lg">
-                        <i class="fas fa-check me-2"></i>Yes, Logout
+                        <i class="fas fa-check me-2"></i>Yes
                     </a>
                 </div>
             </div>
@@ -231,16 +275,15 @@
             }
         });
         
-        // Disable browser back button functionality when on dashboard
-        history.pushState(null, null, location.href);
-        window.onpopstate = function () {
-            // Show the Bootstrap logout modal when trying to navigate back
-            const logoutModal = new bootstrap.Modal(document.getElementById('logoutModal'));
-            logoutModal.show();
-            
-            // Prevent the back navigation by pushing state again
-            history.pushState(null, null, location.href);
-        };
+        // Additional back button prevention (backup)
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ensure modal is properly initialized
+            const modalElement = document.getElementById('logoutModal');
+            if (modalElement) {
+                // Test that modal works
+                console.log('Logout modal found and ready');
+            }
+        });
     </script>
 </body>
 </html>

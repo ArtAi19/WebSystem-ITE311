@@ -36,9 +36,14 @@
             padding: 12px 20px;
             border: 2px solid #e9ecef;
         }
-        .form-control:focus {
+        .form-control:focus, .form-select:focus {
             border-color: #667eea;
             box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .form-select {
+            border-radius: 25px;
+            padding: 12px 20px;
+            border: 2px solid #e9ecef;
         }
     </style>
 </head>
@@ -98,6 +103,38 @@
                             </div>
 
                             <div class="mb-3">
+                                <label for="role" class="form-label">
+                                    <i class="fas fa-user-tag me-1"></i>Select Your Role
+                                </label>
+                                <select class="form-select <?= isset($validation) && $validation->hasError('role') ? 'is-invalid' : '' ?>" 
+                                        id="role" name="role" required>
+                                    <option value="">Choose your role...</option>
+                                    <option value="student" <?= old('role') === 'student' ? 'selected' : '' ?>>
+                                        <i class="fas fa-graduation-cap"></i> Student
+                                    </option>
+                                    <option value="teacher" <?= old('role') === 'teacher' ? 'selected' : '' ?>>
+                                        <i class="fas fa-chalkboard-teacher"></i> Teacher
+                                    </option>
+                                    <option value="admin" <?= old('role') === 'admin' ? 'selected' : '' ?>>
+                                        <i class="fas fa-user-shield"></i> Administrator
+                                    </option>
+                                </select>
+                                <?php if (isset($validation) && $validation->hasError('role')): ?>
+                                    <div class="invalid-feedback">
+                                        <?= $validation->getError('role') ?>
+                                    </div>
+                                <?php endif; ?>
+                                <div class="form-text">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        <strong>Student:</strong> Access courses and assignments | 
+                                        <strong>Teacher:</strong> Manage courses and students | 
+                                        <strong>Admin:</strong> Full system access
+                                    </small>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
                                 <label for="password" class="form-label">
                                     <i class="fas fa-lock me-1"></i>Password
                                 </label>
@@ -134,6 +171,12 @@
                             <p class="mb-0">Already have an account? 
                                 <a href="<?= base_url('login') ?>" class="text-decoration-none fw-bold">Sign In</a>
                             </p>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <a href="<?= base_url('/') ?>" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-home me-1"></i>Back to Home
+                            </a>
                         </div>
                     </div>
                 </div>
