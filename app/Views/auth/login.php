@@ -109,6 +109,12 @@
                                 <a href="<?= base_url('register') ?>" class="text-decoration-none fw-bold">Create Account</a>
                             </p>
                         </div>
+
+                        <div class="text-center mt-3">
+                            <a href="<?= base_url('/') ?>" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-home me-1"></i>Back to Home
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
